@@ -1,0 +1,10 @@
+[package]
+name = "tic_tac_toe_api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocket = { version = "0.5.0-rc.1", features = ["uuid", "json"] }
+dashmap = "5.1.0"
+uuid = { version = "0.8.1", features = ["v4"] }
+serde = "1"
