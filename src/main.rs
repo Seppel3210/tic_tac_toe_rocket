@@ -49,9 +49,14 @@ fn place_symbol(
     })
 }
 
+#[post("/ping")]
+fn ping() -> &'static str {
+    "rocket pong!"
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![create_game, place_symbol, hello])
+        .mount("/", routes![create_game, place_symbol, ping])
         .manage(GameStorage::new())
 }
