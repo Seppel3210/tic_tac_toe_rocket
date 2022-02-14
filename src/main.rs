@@ -2,7 +2,10 @@
 extern crate rocket;
 
 use dashmap::DashMap;
-use rocket::{State, serde::{Deserialize, json::Json}};
+use rocket::{
+    serde::{json::Json, Deserialize},
+    State,
+};
 use uuid::Uuid;
 
 mod game;
@@ -29,7 +32,7 @@ struct MoveInfo {
     y: u8,
 }
 
-#[post("/play/<game_id>", data = "<move_info>")]
+#[post("/<game_id>/play", data = "<move_info>")]
 fn place_symbol(
     game_id: Uuid,
     move_info: Json<MoveInfo>,
@@ -39,7 +42,10 @@ fn place_symbol(
     let (won, active_player) = {
         let mut board = games.get_mut(&game_id).ok_or("invalid game id")?;
         let current_player = board.active_player();
-        (board.place_cell(x, y).map_err(|err| err.message())?, current_player)
+        (
+            board.place_cell(x, y).map_err(|err| err.message())?,
+            current_player,
+        )
     };
     Ok(if won {
         games.remove(&game_id);
@@ -47,6 +53,11 @@ fn place_symbol(
     } else {
         String::new()
     })
+}
+
+#[get("/<game_id>/field")]
+fn get_field(game_id: Uuid, games: &State<GameStorage>) -> Json<Option<TicTacToe>> {
+    Json(games.get(&game_id).as_deref().cloned())
 }
 
 #[post("/ping")]
@@ -57,6 +68,6 @@ fn ping() -> &'static str {
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![create_game, place_symbol, ping])
+        .mount("/", routes![create_game, place_symbol, get_field, ping])
         .manage(GameStorage::new())
 }
