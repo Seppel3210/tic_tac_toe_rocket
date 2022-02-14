@@ -1,4 +1,6 @@
-#[derive(Clone, Copy, PartialEq, Eq)]
+use rocket::serde::Serialize;
+
+#[derive(Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum Player {
     X,
     O,
@@ -22,24 +24,26 @@ impl Player {
 
 const WIDTH: usize = 3;
 
+#[derive(Clone, Copy, Serialize)]
 pub struct TicTacToe {
-    field: [Option<Player>; WIDTH * WIDTH],
+    field: [[Option<Player>; WIDTH]; WIDTH],
     active_player: Player,
 }
 
 impl TicTacToe {
     pub fn new() -> Self {
         Self {
-            field: [None; WIDTH * WIDTH],
+            field: [[None; WIDTH]; WIDTH],
             active_player: Player::X,
         }
     }
 
     pub fn place_cell(&mut self, x: u8, y: u8) -> Result<bool, PlacementError> {
-        let position = (x + y * WIDTH as u8) as usize;
         let cell = self
             .field
-            .get_mut(position)
+            .get_mut(y as usize)
+            .ok_or(PlacementError::OutOfBounds)?
+            .get_mut(x as usize)
             .ok_or(PlacementError::OutOfBounds)?;
         if !cell.is_none() {
             return Err(PlacementError::AlreadyFilled);
@@ -56,15 +60,13 @@ impl TicTacToe {
         let mut cols = [0; WIDTH];
         let mut diagonal_0 = 0;
         let mut diagonal_1 = 0;
-        for (pos, _) in self
+        for (x, y, _) in self
             .field
             .iter()
             .enumerate()
-            .filter_map(|(i, player)| player.map(|p| (i, p)))
-            .filter(|(_, player)| player == &self.active_player)
+            .flat_map(|(y, row)| row.iter().enumerate().map(move |(x, cell)| (x, y, cell)))
+            .filter(|(_, _, player)| player == &&Some(self.active_player))
         {
-            let x = pos % WIDTH;
-            let y = pos / WIDTH;
             cols[x] += 1;
             rows[y] += 1;
             if y == x {
