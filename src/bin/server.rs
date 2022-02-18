@@ -58,9 +58,14 @@ fn get_field(game_id: Uuid, games: &State<GameStorage>) -> Json<Option<TicTacToe
     Json(games.get(&game_id).as_deref().cloned())
 }
 
+#[post("/ping")]
+fn ping() -> &'static str {
+    "rocket pong!"
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![create_game, place_symbol, get_field])
+        .mount("/", routes![create_game, place_symbol, get_field, ping])
         .manage(GameStorage::new())
 }
