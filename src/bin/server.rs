@@ -8,9 +8,7 @@ use rocket::{
 };
 use uuid::Uuid;
 
-mod game;
-
-use game::TicTacToe;
+use tic_tac_toe_api::game::TicTacToe;
 
 type GameStorage = DashMap<Uuid, TicTacToe>;
 
